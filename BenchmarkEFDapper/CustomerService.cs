@@ -3,6 +3,7 @@ using Dapper;
 using Dapper.Contrib.Extensions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace BenchmarkEFDapper
 {
@@ -34,55 +35,6 @@ namespace BenchmarkEFDapper
             }
         }
 
-        public void InsertEFOneByOne(int regs)
-        {
-            GenerateCustomers(regs);
-
-            using (var context = new BenchmarkDbContext())
-            {
-                foreach (var customer in _customers)
-                {
-                    context.Customers.Add(customer);
-                    context.SaveChanges();
-                }
-            }
-        }
-
-        public void UpdateAllEF()
-        {
-            using (var context = new BenchmarkDbContext())
-            {
-                var customers = context.Customers.ToList();
-                var rnd = new Random();
-
-                foreach (var customer in customers)
-                {
-                    customer.FullName = "teste" + rnd.Next(100);
-                    customer.Email = "teste@email.com";
-                }
-
-                context.UpdateRange(customers);
-                context.SaveChanges();
-            }
-        }
-
-        public void UpdateAllEFOneByOne()
-        {
-            using (var context = new BenchmarkDbContext())
-            {
-                var customers = context.Customers.ToList();
-                var rnd = new Random();
-
-                foreach (var customer in customers)
-                {
-                    customer.FullName = "teste" + rnd.Next(100);
-                    customer.Email = "teste@email.com";
-                    context.UpdateRange(customer);
-                    context.SaveChanges();
-                }
-            }
-        }
-
         public void DeleteAllEF()
         {
             using (var context = new BenchmarkDbContext())
@@ -99,53 +51,10 @@ namespace BenchmarkEFDapper
 
             using (var connection = new SqlConnection(connectionString))
             {
-                connection.Insert<List<Customer>>(_customers);
-            }
-        }
-
-        public void InsertDapperContribOneByOne(int regs)
-        {
-            GenerateCustomers(regs);
-
-            using (var connection = new SqlConnection(connectionString))
-            {
-                foreach (var customer in _customers)
-                {
-                    connection.Insert(customer);
-                }
-            }
-        }
-
-        public void UpdateDapperContrib()
-        {
-            using (var connection = new SqlConnection(connectionString))
-            {
-                var customers = connection.GetAll<Customer>();
-                var rnd = new Random();
-
-                foreach (var customer in customers)
-                {
-                    customer.FullName = "teste" + rnd.Next(100);
-                    customer.Email = "teste@email.com";
-                }
-
-                connection.Update(customers);
-            }
-        }
-
-        public void UpdateDapperContribOneByOne()
-        {
-            using (var connection = new SqlConnection(connectionString))
-            {
-                var customers = connection.GetAll<Customer>();
-                var rnd = new Random();
-
-                foreach (var customer in customers)
-                {
-                    customer.FullName = "teste" + rnd.Next(100);
-                    customer.Email = "teste@email.com";
-                    connection.Update(customer);
-                }
+                connection.Open();
+                SqlTransaction trans = connection.BeginTransaction();
+                connection.Insert<List<Customer>>(_customers, trans);
+                trans.Commit();
             }
         }
 
