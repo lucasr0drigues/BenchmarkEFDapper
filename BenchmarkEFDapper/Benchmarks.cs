@@ -1,33 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BenchmarkDotNet.Attributes;
 
 namespace BenchmarkEFDapper
 {
-    //[MemoryDiagnoser(false)]
-    //[MemoryDiagnoser]
-    //[RankColumn]
-    //[Orderer(SummaryOrderPolicy.FastestToSlowest)]
+    [MemoryDiagnoser]
+    [RankColumn]
     public class Benchmarks
     {
-        //private readonly CustomerService _customerService = new();
 
-        //[Params(0,5000,9999)]
-        //public int Id { get; set; }
+        [Params(1, 20, 100)]
+        public int Regs { get; set; }
 
-        //[Benchmark]
-        //public Customer First_ById()
-        //{
-        //    return _customerService.GetById_FirstOrDefault(Id)!;
-        //}
+        private readonly CustomerService _customerService = new();
 
-        //[Benchmark]
-        //public Customer Single_ById()
-        //{
-        //    return _customerService.GetById_SingleOrDefault(Id)!;
-        //}
+        [Benchmark]
+        public void EF()
+        {
+            _customerService.InsertEF(Regs);
+            _customerService.UpdateAllEF();
+            _customerService.DeleteAllEF();
+        }
+
+        [Benchmark]
+        public void DapperContrib()
+        {
+            _customerService.InsertDapperContrib(Regs);
+            _customerService.UpdateDapperContrib();
+            _customerService.DeleteDapperContrib();
+        }
+
+        [Benchmark]
+        public void EFOneByOne()
+        {
+            _customerService.InsertEFOneByOne(Regs);
+            _customerService.UpdateAllEFOneByOne();
+            _customerService.DeleteAllEF();
+        }
+
+        [Benchmark]
+        public void DapperContribOneByOne()
+        {
+            _customerService.InsertDapperContribOneByOne(Regs);
+            _customerService.UpdateDapperContribOneByOne();
+            _customerService.DeleteDapperContrib();
+        }
+
+
 
     }
 }
